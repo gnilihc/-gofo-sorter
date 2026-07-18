@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>GOFO 动态分区助手</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding-bottom:80px}
+header{background:#111827;color:white;padding:15px 16px;position:sticky;top:0;z-index:10}header b{font-size:19px}header div{font-size:12px;color:#cbd5e1;margin-top:3px}
+main{max-width:700px;margin:auto;padding:14px}.card{background:white;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+h2{font-size:18px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:800;margin:10px 0 5px}
+input,textarea,button{font:inherit}input,textarea{width:100%;border:1px solid #cbd5e1;border-radius:11px;padding:12px;font-size:16px}textarea{min-height:190px;font-family:ui-monospace,Menlo,monospace}
+button{width:100%;border:0;border-radius:12px;padding:13px;font-weight:850;font-size:16px;background:#2563eb;color:white}.secondary{background:#e2e8f0;color:#111827}.good{background:#16a34a}
+.note{font-size:13px;color:#64748b;line-height:1.5}.status{margin-top:10px;padding:11px;border-radius:11px;background:#e2e8f0;font-size:14px}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}
+.page{display:none}.page.active{display:block}.tabs{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(3,1fr);background:white;border-top:1px solid #cbd5e1}.tabs button{background:white;color:#64748b;border-radius:0;padding:12px 4px}.tabs button.active{color:#2563eb}
+.row{display:flex;gap:8px;margin-top:10px}.row>*{flex:1}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{text-align:center;background:#f8fafc;padding:10px;border-radius:12px}.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:#64748b}
+.filelabel{display:block;background:#111827;color:white;border-radius:12px;padding:14px;text-align:center;font-weight:850}.filelabel input{display:none}
+#canvasWrap{display:none;margin-top:12px;touch-action:none}canvas{width:100%;display:block;border-radius:12px;background:#111}
+.result{display:none;text-align:center;border-radius:16px;padding:18px;margin-top:14px}.code{font-size:44px;font-weight:950}.area{font-size:30px;font-weight:950;margin-top:9px}.place{font-size:23px;font-weight:850;margin-top:5px}.order{font-size:16px;font-weight:800;margin-top:5px}
+.A{background:#fee2e2}.B{background:#dbeafe}.C{background:#fef3c7}.D{background:#dcfce7}.E{background:#ede9fe}.F{background:#fae8ff}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}.chip{width:auto;background:white;color:#111827;border:1px solid #94a3b8;border-radius:999px;padding:9px 15px;font-size:18px}
+.missing{white-space:pre-wrap;background:#111827;color:white;padding:12px;border-radius:12px;min-height:90px;font-family:ui-monospace,Menlo,monospace}
+.progress{height:10px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin:10px 0}.progress div{height:100%;background:#22c55e;width:0}
+</style></head>
+<body>
+<header><b>GOFO 动态分区助手</b><div>每天换线路数据；软件本身不变</div></header>
+<main>
+<section id="setup" class="page active"><div class="card">
+<h2>① 导入今天的线路计划</h2>
+<p class="note">每行：<b>完整编号,区域,派送顺序,车内位置</b>。可同时包含多条路线。</p>
+<textarea id="dataText" spellcheck="false">H115,A,1,副驾驶
+H116,C,3,后排右侧
+B501,B,2,后排左侧
+D088,D,4,后备箱</textarea>
+<p class="note">例如 H115、B501。区域可写A—F。</p>
+<div class="row"><button id="saveToday">保存今日线路</button><button id="clearScans" class="secondary">清空扫描记录</button></div>
+<div id="setupMsg" class="status">尚未保存。</div>
+</div></section>
+
+<section id="scan" class="page"><div class="card">
+<h2>② 拍马克笔编号并装车</h2>
+<div class="stats"><div class="stat"><b id="expected">0</b><span>应有</span></div><div class="stat"><b id="scanned">0</b><span>已确认</span></div><div class="stat"><b id="remaining">0</b><span>未确认</span></div></div>
+<div class="progress"><div id="bar"></div></div>
+<p class="note"><b>拍照后，用手指拖红框，只框住马克笔字母和数字。</b></p>
+<label class="filelabel">打开相机拍编号<input id="photo" type="file" accept="image/*" capture="environment"></label>
+<div id="canvasWrap"><canvas id="canvas"></canvas><p class="note">重新拖动可改变红框。</p><button id="recognize">识别红框内容</button></div>
+<div id="ocrMsg" class="status">等待拍照。</div>
+<div id="result" class="result">
+<div class="note">候选号码——必须看一眼确认</div><div id="mainCode" class="code">—</div><div id="chips" class="chips"></div>
+<div class="row"><input id="manual" placeholder="错误时输入完整编号，如H115"><button id="useManual" class="secondary">使用输入</button></div>
+<div id="area" class="area"></div><div id="order" class="order"></div><div id="place" class="place"></div>
+<div class="row"><button id="confirm" class="good">确认并记录</button><button id="cancel" class="secondary">取消</button></div>
+</div></div></section>
+
+<section id="audit" class="page"><div class="card">
+<h2>③ 缺件盘点</h2>
+<div class="stats"><div class="stat"><b id="aExpected">0</b><span>应有</span></div><div class="stat"><b id="aScanned">0</b><span>已确认</span></div><div class="stat"><b id="aMissing">0</b><span>缺少</span></div></div>
+<h3>没有扫到的编号</h3><div id="missing" class="missing">请先保存今日线路。</div>
+<button id="copyAudit" class="secondary" style="margin-top:10px">复制缺件结果</button>
+</div></section>
+</main>
+<nav class="tabs"><button data-page="setup" class="active">今日线路</button><button data-page="scan">扫描装车</button><button data-page="audit">缺件盘点</button></nav>
+<script>
+const $=id=>document.getElementById(id);let state={items:{},scanned:[]},img=new Image(),selection=null,dragStart=null,worker=null,current=null;
+function norm(x){return String(x||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function parseData(text){const out={},errors=[];text.split(/\n+/).forEach((line,i)=>{line=line.trim();if(!line)return;const p=line.split(/[,，|\t]/).map(x=>x.trim());if(p.length<4){errors.push(i+1);return}const code=norm(p[0]),zone=p[1].toUpperCase(),order=p[2],place=p.slice(3).join(" ");if(!/^[A-Z]+\d+$/.test(code)||!zone||!place){errors.push(i+1);return}out[code]={zone,order,place}});return{out,errors}}
+function saveLocal(){localStorage.setItem("gofoDynamicSorter",JSON.stringify(state))}
+function loadLocal(){try{const x=localStorage.getItem("gofoDynamicSorter");if(x)state=JSON.parse(x)}catch(e){}update()}
+function keys(){return Object.keys(state.items||{}).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))}
+function update(){const exp=keys(),sc=[...new Set(state.scanned||[])].filter(x=>state.items[x]);state.scanned=sc;const miss=exp.filter(x=>!sc.includes(x));expected.textContent=aExpected.textContent=exp.length;scanned.textContent=aScanned.textContent=sc.length;remaining.textContent=aMissing.textContent=miss.length;bar.style.width=exp.length?Math.round(sc.length/exp.length*100)+"%":"0%";missing.textContent=exp.length?(miss.length?miss.join("\n"):"✅ 没有缺件"):"请先保存今日线路。"}
+saveToday.onclick=()=>{const{out,errors}=parseData(dataText.value);if(!Object.keys(out).length){setupMsg.className="status err";setupMsg.textContent="没有读到有效数据。";return}state.items=out;state.scanned=state.scanned.filter(x=>out[x]);saveLocal();update();setupMsg.className="status ok";setupMsg.textContent=`已保存 ${Object.keys(out).length} 件${errors.length?`；第 ${errors.join(",")} 行有问题`:"；可以开始扫描"}`};
+clearScans.onclick=()=>{if(confirm("只清空扫描记录吗？")){state.scanned=[];saveLocal();update()}};
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.page).classList.add("active");update()});
+const cv=canvas,ctx=cv.getContext("2d");
+function draw(){if(!img.src)return;ctx.drawImage(img,0,0,cv.width,cv.height);if(!selection)selection={x:cv.width*.12,y:cv.height*.28,w:cv.width*.76,h:cv.height*.45};ctx.strokeStyle="#ef4444";ctx.lineWidth=4;ctx.strokeRect(selection.x,selection.y,selection.w,selection.h);ctx.fillStyle="rgba(239,68,68,.10)";ctx.fillRect(selection.x,selection.y,selection.w,selection.h)}
+photo.onchange=e=>{const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f);img.onload=()=>{const sc=Math.min(1,1000/img.naturalWidth);cv.width=Math.round(img.naturalWidth*sc);cv.height=Math.round(img.naturalHeight*sc);selection=null;draw();canvasWrap.style.display="block";ocrMsg.textContent="请拖红框，只框住手写编号。";URL.revokeObjectURL(u)};img.src=u};
+cv.addEventListener("pointerdown",e=>{const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;dragStart={x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};selection={x:dragStart.x,y:dragStart.y,w:1,h:1};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener("pointermove",e=>{if(!dragStart)return;const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height,x=(e.clientX-r.left)*sx,y=(e.clientY-r.top)*sy;selection={x:Math.min(dragStart.x,x),y:Math.min(dragStart.y,y),w:Math.abs(x-dragStart.x),h:Math.abs(y-dragStart.y)};draw()});
+cv.addEventListener("pointerup",()=>{dragStart=null;draw()});
+function crop(){const s=selection||{x:0,y:0,w:cv.width,h:cv.height},c=document.createElement("canvas"),scale=Math.max(2,Math.min(4,1200/Math.max(s.w,1)));c.width=Math.max(10,Math.round(s.w*scale));c.height=Math.max(10,Math.round(s.h*scale));const x=c.getContext("2d");x.drawImage(cv,s.x,s.y,s.w,s.h,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height);for(let i=0;i<d.data.length;i+=4){const g=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2],v=g<175?0:255;d.data[i]=d.data[i+1]=d.data[i+2]=v}x.putImageData(d,0,0);return c}
+async function getWorker(){if(worker)return worker;ocrMsg.textContent="首次加载OCR引擎，请稍等……";worker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")ocrMsg.textContent=`识别中 ${Math.round((m.progress||0)*100)}%`}});await worker.setParameters({tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",tessedit_pageseg_mode:"7"});return worker}
+function dist(a,b){const d=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));for(let i=0;i<=a.length;i++)d[i][0]=i;for(let j=0;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+function candidates(raw){const base=norm(raw),all=keys();let out=[];if(base)out.push(base);all.map(code=>({code,d:dist(base,code)})).sort((a,b)=>a.d-b.d||a.code.localeCompare(b.code,undefined,{numeric:true})).slice(0,6).forEach(x=>out.push(x.code));return[...new Set(out)].filter(Boolean).slice(0,7)}
+recognize.onclick=async()=>{if(!keys().length)return alert("请先保存今日线路。");if(!img.src)return alert("请先拍照。");recognize.disabled=true;result.style.display="none";try{const w=await getWorker(),r=await w.recognize(crop()),raw=r.data.text||"",list=candidates(raw);ocrMsg.className="status ok";ocrMsg.textContent=`OCR原始结果：${norm(raw)||"未识别"}。请确认。`;show(list)}catch(e){ocrMsg.className="status err";ocrMsg.textContent="OCR加载或识别失败，请检查网络。"}recognize.disabled=false};
+function show(list){result.style.display="block";chips.innerHTML="";list.forEach(code=>{const b=document.createElement("button");b.className="chip";b.textContent=code;b.onclick=()=>pick(code);chips.appendChild(b)});if(list.length)pick(list[0]);else{mainCode.textContent="手动输入";confirm.disabled=true}}
+function pick(code){code=norm(code);current=code;mainCode.textContent=code||"—";const item=state.items[code];result.className="result "+(item?.zone||"");if(item){area.textContent=`${item.zone}区`;order.textContent=`派送顺序：${item.order}`;place.textContent=item.place;confirm.disabled=false}else{area.textContent="不在今日清单";order.textContent="请改选候选或手动输入";place.textContent="";confirm.disabled=true}}
+useManual.onclick=()=>pick(manual.value);
+confirm.onclick=()=>{if(!current||!state.items[current])return;if(state.scanned.includes(current))return alert(`⚠️ 重复：${current} 已确认过。`);state.scanned.push(current);saveLocal();update();const item=state.items[current];if("speechSynthesis"in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(`${item.zone}区，${item.place}`);u.lang="zh-CN";speechSynthesis.speak(u)}alert(`${current} → ${item.zone}区 → ${item.place}`);result.style.display="none";photo.value="";canvasWrap.style.display="none";img.src="";current=null};
+cancel.onclick=()=>{result.style.display="none";current=null};
+copyAudit.onclick=async()=>{const miss=keys().filter(x=>!state.scanned.includes(x)),t=`应有：${keys().length}\n已确认：${state.scanned.length}\n缺少：${miss.length}\n${miss.join(", ")||"无"}`;try{await navigator.clipboard.writeText(t);alert("缺件结果已复制")}catch(e){prompt("复制：",t)}};
+loadLocal();
+</script></body></html>
