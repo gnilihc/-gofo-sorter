@@ -2,93 +2,304 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<title>GOFO 动态分区助手</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOFO分拣">
+<meta name="mobile-web-app-capable" content="yes">
+
+<title>GOFO 智能分拣联动测试版</title>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f1f5f9;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding-bottom:80px}
-header{background:#111827;color:white;padding:15px 16px;position:sticky;top:0;z-index:10}header b{font-size:19px}header div{font-size:12px;color:#cbd5e1;margin-top:3px}
-main{max-width:700px;margin:auto;padding:14px}.card{background:white;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-h2{font-size:18px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:800;margin:10px 0 5px}
-input,textarea,button{font:inherit}input,textarea{width:100%;border:1px solid #cbd5e1;border-radius:11px;padding:12px;font-size:16px}textarea{min-height:190px;font-family:ui-monospace,Menlo,monospace}
-button{width:100%;border:0;border-radius:12px;padding:13px;font-weight:850;font-size:16px;background:#2563eb;color:white}.secondary{background:#e2e8f0;color:#111827}.good{background:#16a34a}
-.note{font-size:13px;color:#64748b;line-height:1.5}.status{margin-top:10px;padding:11px;border-radius:11px;background:#e2e8f0;font-size:14px}.ok{background:#dcfce7;color:#166534}.err{background:#fee2e2;color:#991b1b}
-.page{display:none}.page.active{display:block}.tabs{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(3,1fr);background:white;border-top:1px solid #cbd5e1}.tabs button{background:white;color:#64748b;border-radius:0;padding:12px 4px}.tabs button.active{color:#2563eb}
-.row{display:flex;gap:8px;margin-top:10px}.row>*{flex:1}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{text-align:center;background:#f8fafc;padding:10px;border-radius:12px}.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:#64748b}
-.filelabel{display:block;background:#111827;color:white;border-radius:12px;padding:14px;text-align:center;font-weight:850}.filelabel input{display:none}
-#canvasWrap{display:none;margin-top:12px;touch-action:none}canvas{width:100%;display:block;border-radius:12px;background:#111}
-.result{display:none;text-align:center;border-radius:16px;padding:18px;margin-top:14px}.code{font-size:44px;font-weight:950}.area{font-size:30px;font-weight:950;margin-top:9px}.place{font-size:23px;font-weight:850;margin-top:5px}.order{font-size:16px;font-weight:800;margin-top:5px}
-.A{background:#fee2e2}.B{background:#dbeafe}.C{background:#fef3c7}.D{background:#dcfce7}.E{background:#ede9fe}.F{background:#fae8ff}
-.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}.chip{width:auto;background:white;color:#111827;border:1px solid #94a3b8;border-radius:999px;padding:9px 15px;font-size:18px}
-.missing{white-space:pre-wrap;background:#111827;color:white;padding:12px;border-radius:12px;min-height:90px;font-family:ui-monospace,Menlo,monospace}
-.progress{height:10px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin:10px 0}.progress div{height:100%;background:#22c55e;width:0}
-</style></head>
+:root{--navy:#0f172a;--blue:#2563eb;--green:#16a34a;--orange:#ea580c;--red:#dc2626;--slate:#64748b;--bg:#eef2f7;--card:#fff;--line:#d8e0eb}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}body{padding-bottom:78px}
+header{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;padding:14px 16px 13px;box-shadow:0 4px 16px rgba(15,23,42,.18)}
+header h1{font-size:19px;margin:0;font-weight:900}header p{font-size:12px;margin:4px 0 0;color:#dbeafe}
+main{max-width:820px;margin:auto;padding:12px}.page{display:none}.page.active{display:block}.card{background:var(--card);border-radius:17px;padding:15px;margin-bottom:12px;box-shadow:0 2px 12px rgba(15,23,42,.07);border:1px solid rgba(216,224,235,.7)}
+h2{font-size:18px;margin:0 0 10px}h3{font-size:15px;margin:16px 0 8px}.note{font-size:13px;color:var(--slate);line-height:1.5;margin:7px 0}.strong{font-weight:850;color:#111827}.warnText{color:#9a3412}.dangerText{color:#991b1b}
+label.field{display:block;font-size:13px;font-weight:850;margin:10px 0 5px}input,textarea,select,button{font:inherit}input,textarea,select{width:100%;border:1px solid #cbd5e1;border-radius:11px;padding:11px 12px;font-size:16px;background:white}textarea{min-height:130px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}
+button{border:0;border-radius:12px;padding:12px 13px;font-weight:850;font-size:15px;background:var(--blue);color:white;touch-action:manipulation}button:disabled{opacity:.45}.secondary{background:#e2e8f0;color:#111827}.success{background:var(--green)}.warning{background:var(--orange)}.danger{background:var(--red)}.dark{background:var(--navy)}.smallBtn{width:auto;padding:8px 10px;font-size:13px;border-radius:9px}
+.row{display:flex;gap:8px;align-items:stretch}.row>*{flex:1}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.fileBtn{display:block;border:1.5px dashed #94a3b8;border-radius:13px;padding:14px;text-align:center;font-weight:850;background:#f8fafc;color:#0f172a}.fileBtn input{display:none}.fileBtn.ready{border-color:#16a34a;background:#f0fdf4;color:#166534}
+.previewGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.previewGrid img{width:100%;height:150px;object-fit:contain;background:#0f172a;border-radius:11px}.hidden{display:none!important}
+.status{padding:11px 12px;border-radius:12px;background:#e2e8f0;font-size:13px;line-height:1.45;margin-top:10px}.status.ok{background:#dcfce7;color:#166534}.status.warn{background:#ffedd5;color:#9a3412}.status.err{background:#fee2e2;color:#991b1b}.status.info{background:#dbeafe;color:#1e40af}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.stat{background:#f8fafc;border-radius:12px;padding:10px 5px;text-align:center;border:1px solid #e2e8f0}.stat b{display:block;font-size:22px;line-height:1.1}.stat span{font-size:11px;color:#64748b}.progress{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:10px 0}.progress>div{height:100%;width:0;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .2s}
+.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:620px;background:white}th,td{padding:9px 8px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:13px;vertical-align:top}th{position:sticky;top:0;background:#f8fafc;z-index:2;font-size:12px;color:#475569}td input{font-size:13px;padding:7px;border-radius:8px}.tag{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#e2e8f0;margin:2px}.tag.green{background:#dcfce7;color:#166534}.tag.orange{background:#ffedd5;color:#9a3412}.tag.blue{background:#dbeafe;color:#1e40af}.tag.red{background:#fee2e2;color:#991b1b}
+.issue{padding:9px 10px;border-left:4px solid #f97316;background:#fff7ed;border-radius:9px;margin:7px 0;font-size:13px}.issue.red{border-color:#dc2626;background:#fef2f2}.bagCard{border:1px solid #dbe2ec;border-radius:14px;padding:12px;margin:9px 0;background:#fff}.bagHead{display:flex;gap:10px;align-items:center}.bagNo{min-width:58px;height:58px;border-radius:14px;background:#111827;color:#fff;display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:950}.bagMeta{flex:1}.bagMeta b{font-size:15px}.bagMeta div{font-size:12px;color:#64748b;margin-top:3px}.codes{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;background:#f8fafc;padding:9px;border-radius:9px;margin-top:8px;word-break:break-word}
+.scanPanel{text-align:center}.scanCode{font-size:40px;font-weight:950;letter-spacing:1px}.scanBag{font-size:76px;line-height:1;font-weight:1000;margin:12px 0;color:#1d4ed8}.scanTask{font-size:20px;font-weight:900}.scanCar{font-size:17px;font-weight:800;margin-top:6px}.scanAddress{font-size:13px;color:#64748b;margin-top:8px}.scanResult{padding:18px;border-radius:18px;background:#eff6ff;border:2px solid #bfdbfe;margin-top:12px}.scanResult.duplicate{background:#fef2f2;border-color:#ef4444}.scanResult.unknown{background:#fff7ed;border-color:#fb923c}
+.cameraLabel{display:block;background:#111827;color:white;border-radius:12px;padding:13px;font-weight:900;text-align:center}.cameraLabel input{display:none}#scanCanvasWrap{display:none;margin-top:10px;touch-action:none}#scanCanvas{display:block;width:100%;border-radius:12px;background:#111}.timer{font-variant-numeric:tabular-nums;font-weight:900}.bigAction{font-size:18px;padding:15px}.currentTask{border:2px solid #2563eb;background:#eff6ff}.taskDone{opacity:.55}.taskTitle{font-weight:900;font-size:16px}.taskSub{font-size:12px;color:#64748b;margin-top:4px}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,255,255,.97);border-top:1px solid #cbd5e1;padding-bottom:max(0px,env(safe-area-inset-bottom));backdrop-filter:blur(12px)}nav.tabs button{background:transparent;color:#64748b;border-radius:0;padding:10px 2px 9px;font-size:11px;min-height:56px}nav.tabs button.active{color:#1d4ed8;background:#eff6ff}.tabIcon{display:block;font-size:19px;margin-bottom:2px}
+details{border:1px solid #e2e8f0;border-radius:12px;padding:10px;background:#f8fafc}summary{font-weight:850;cursor:pointer}.inlineCheck{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:13px}.inlineCheck input{width:auto}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.footerNote{font-size:11px;color:#94a3b8;text-align:center;margin:14px 0}
+@media(max-width:560px){.grid4{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr}.row.wrap{flex-wrap:wrap}.row.wrap>*{min-width:45%}.previewGrid img{height:115px}.scanBag{font-size:68px}}
+</style>
+</head>
 <body>
-<header><b>GOFO 动态分区助手</b><div>每天换线路数据；软件本身不变</div></header>
+<header><h1>GOFO 智能分拣联动测试版</h1><p>录屏导入 → 连单展开 → 建筑归并 → 任务袋 → 扫描装车 → 配送</p></header>
 <main>
-<section id="setup" class="page active"><div class="card">
-<h2>① 导入今天的线路计划</h2>
-<p class="note">每行：<b>完整编号,区域,派送顺序,车内位置</b>。可同时包含多条路线。</p>
-<textarea id="dataText" spellcheck="false">H115,A,1,副驾驶
-H116,C,3,后排右侧
-B501,B,2,后排左侧
-D088,D,4,后备箱</textarea>
-<p class="note">例如 H115、B501。区域可写A—F。</p>
-<div class="row"><button id="saveToday">保存今日线路</button><button id="clearScans" class="secondary">清空扫描记录</button></div>
-<div id="setupMsg" class="status">尚未保存。</div>
-</div></section>
 
-<section id="scan" class="page"><div class="card">
-<h2>② 拍马克笔编号并装车</h2>
-<div class="stats"><div class="stat"><b id="expected">0</b><span>应有</span></div><div class="stat"><b id="scanned">0</b><span>已确认</span></div><div class="stat"><b id="remaining">0</b><span>未确认</span></div></div>
-<div class="progress"><div id="bar"></div></div>
-<p class="note"><b>拍照后，用手指拖红框，只框住马克笔字母和数字。</b></p>
-<label class="filelabel">打开相机拍编号<input id="photo" type="file" accept="image/*" capture="environment"></label>
-<div id="canvasWrap"><canvas id="canvas"></canvas><p class="note">重新拖动可改变红框。</p><button id="recognize">识别红框内容</button></div>
-<div id="ocrMsg" class="status">等待拍照。</div>
-<div id="result" class="result">
-<div class="note">候选号码——必须看一眼确认</div><div id="mainCode" class="code">—</div><div id="chips" class="chips"></div>
-<div class="row"><input id="manual" placeholder="错误时输入完整编号，如H115"><button id="useManual" class="secondary">使用输入</button></div>
-<div id="area" class="area"></div><div id="order" class="order"></div><div id="place" class="place"></div>
-<div class="row"><button id="confirm" class="good">确认并记录</button><button id="cancel" class="secondary">取消</button></div>
-</div></div></section>
+<section id="create" class="page active">
+  <div class="card">
+    <h2>① 创建今日任务</h2>
+    <div class="grid4">
+      <div><label class="field">路线字母</label><input id="routePrefix" value="H" maxlength="4" autocapitalize="characters"></div>
+      <div><label class="field">起始编号</label><input id="startSeq" type="number" value="91"></div>
+      <div><label class="field">结束编号</label><input id="endSeq" type="number" value="188"></div>
+      <div><label class="field">袋子数量</label><input id="bagCount" type="number" value="12" min="1" max="30"></div>
+    </div>
+    <div class="grid3">
+      <div><label class="field">每袋建议上限</label><input id="bagCapacity" type="number" value="15" min="3" max="40"></div>
+      <div><label class="field">独立建筑阈值</label><input id="buildingThreshold" type="number" value="3" min="2" max="20"></div>
+      <div><label class="field">前排快速区目标</label><input id="frontTarget" type="number" value="50" min="10" max="100"></div>
+    </div>
+    <label class="field">你的整体配送顺序</label>
+    <input id="deliveryOrder" placeholder="例如：A → D → B → C（你决定先后顺序）">
+    <p class="note">编号范围用于校验录屏是否漏单。比如 H91—H188 理论上共有98件。</p>
+  </div>
 
-<section id="audit" class="page"><div class="card">
-<h2>③ 缺件盘点</h2>
-<div class="stats"><div class="stat"><b id="aExpected">0</b><span>应有</span></div><div class="stat"><b id="aScanned">0</b><span>已确认</span></div><div class="stat"><b id="aMissing">0</b><span>缺少</span></div></div>
-<h3>没有扫到的编号</h3><div id="missing" class="missing">请先保存今日线路。</div>
-<button id="copyAudit" class="secondary" style="margin-top:10px">复制缺件结果</button>
-</div></section>
+  <div class="card">
+    <h2>② 导入当天资料</h2>
+    <label id="videoLabel" class="fileBtn">选择GOFO列表录屏<input id="videoFile" type="file" accept="video/*"></label>
+    <div class="grid2" style="margin-top:8px">
+      <label id="overviewLabel" class="fileBtn">选择配送总览图<input id="overviewFile" type="file" accept="image/*"></label>
+      <label id="orderLabel" class="fileBtn">选择你画好顺序的图<input id="orderFile" type="file" accept="image/*"></label>
+    </div>
+    <div id="mapPreviews" class="previewGrid hidden"><img id="overviewPreview" alt="总览图"><img id="orderPreview" alt="顺序图"></div>
+    <video id="videoPreview" class="hidden" controls playsinline style="width:100%;max-height:280px;margin-top:10px;border-radius:12px;background:#111"></video>
+    <div id="videoInfo" class="status">尚未选择录屏。</div>
+  </div>
+
+  <div class="card">
+    <h2>③ 从录屏提取订单</h2>
+    <div class="grid3">
+      <div><label class="field">最多抽取帧数</label><input id="maxFrames" type="number" value="45" min="5" max="150"></div>
+      <div><label class="field">裁掉顶部</label><input id="cropTop" type="number" value="19" min="0" max="60"><div class="note">百分比</div></div>
+      <div><label class="field">裁掉底部</label><input id="cropBottom" type="number" value="2" min="0" max="40"><div class="note">百分比</div></div>
+    </div>
+    <div class="row wrap">
+      <button id="analyzeVideo" class="dark">开始分析录屏</button>
+      <button id="stopAnalyze" class="danger" disabled>停止</button>
+      <button id="loadExample" class="secondary">加载截图示例</button>
+    </div>
+    <div class="progress"><div id="videoBar"></div></div>
+    <div id="analysisStatus" class="status info">第一轮建议先用20—30单的短录屏测试。手机本地OCR速度取决于机型和录屏清晰度。</div>
+    <details style="margin-top:10px"><summary>测试/纠错：粘贴OCR原文</summary>
+      <textarea id="rawOcr" placeholder="录屏识别后的文字会累积在这里；也可以手动粘贴测试文本。"></textarea>
+      <div class="row"><button id="parseRaw">解析文字</button><button id="clearTask" class="secondary">清空今日任务</button></div>
+    </details>
+  </div>
+  <div class="footerNote">客户地址只保存在当前浏览器的本地存储中；本测试版不会自动上传到服务器。</div>
+</section>
+
+<section id="review" class="page">
+  <div class="card">
+    <h2>识别核对</h2>
+    <div class="stats">
+      <div class="stat"><b id="cardCount">0</b><span>地址卡片</span></div>
+      <div class="stat"><b id="packageCount">0</b><span>展开包裹</span></div>
+      <div class="stat"><b id="expectedCount">0</b><span>理论件数</span></div>
+      <div class="stat"><b id="issueCount">0</b><span>问题</span></div>
+    </div>
+    <div id="reviewSummary" class="status">尚未导入订单。</div>
+    <div id="issues"></div>
+    <div class="row wrap" style="margin-top:10px"><button id="addCard" class="secondary">手动加一条</button><button id="rebuildPackages">重新展开并校验</button><button id="exportJson" class="secondary">导出备份</button><label class="smallBtn secondary" style="text-align:center;cursor:pointer">导入备份<input id="importJson" type="file" accept="application/json" style="display:none"></label></div>
+  </div>
+  <div class="card">
+    <h2>GOFO地址卡</h2>
+    <p class="note"><b>连单规则：</b>X×K＝从X开始、包含X在内的连续K件，即X、X+1……X+K−1。K可以是2、3、4、5、6或更高。</p>
+    <div class="tableWrap"><table><thead><tr><th>起始号</th><th>×件数</th><th>完整地址</th><th>展开范围</th><th></th></tr></thead><tbody id="cardsBody"></tbody></table></div>
+  </div>
+</section>
+
+<section id="plan" class="page">
+  <div class="card">
+    <h2>自动生成任务袋</h2>
+    <p class="note">本测试版先按“相同主地址必须归并、连单不拆散、集中地址独立成袋、其余按编号顺序装袋”生成初步方案。真实地图自动定位与AI识别你画的区域边界，将在下一轮接入私人后台。</p>
+    <div class="row wrap"><button id="generatePlan" class="success bigAction">生成/刷新分袋方案</button><button id="resetPlan" class="secondary">清空方案</button></div>
+    <div id="planStatus" class="status">还没有分袋方案。</div>
+    <div class="stats" style="margin-top:10px">
+      <div class="stat"><b id="plannedBags">0</b><span>使用袋数</span></div>
+      <div class="stat"><b id="frontPackages">0</b><span>前排快速件</span></div>
+      <div class="stat"><b id="largeTasks">0</b><span>集中建筑</span></div>
+      <div class="stat"><b id="overCapacity">0</b><span>超容量袋</span></div>
+    </div>
+  </div>
+  <div id="bagsList"></div>
+</section>
+
+<section id="scan" class="page">
+  <div class="card">
+    <h2>高速扫描分拣</h2>
+    <div class="stats">
+      <div class="stat"><b id="scanTotal">0</b><span>应有</span></div>
+      <div class="stat"><b id="scanDone">0</b><span>已分拣</span></div>
+      <div class="stat"><b id="scanMissing">0</b><span>未分拣</span></div>
+      <div class="stat"><b id="scanTimer" class="timer">00:00</b><span>用时</span></div>
+    </div>
+    <div class="progress"><div id="scanBar"></div></div>
+    <div id="paceStatus" class="status">点击“开始计时”，目标200件不超过20分钟。</div>
+    <div class="row"><button id="startTimer" class="success">开始计时</button><button id="undoScan" class="secondary">撤销上一件</button></div>
+  </div>
+  <div class="card">
+    <label class="field">手动输入（扫描失败时直接用）</label>
+    <div class="row"><input id="manualCode" inputmode="text" autocapitalize="characters" placeholder="输入H115或115"><button id="manualLookup">查询</button></div>
+    <label class="cameraLabel" style="margin-top:10px">拍摄马克笔编号<input id="scanPhoto" type="file" accept="image/*" capture="environment"></label>
+    <div id="scanCanvasWrap"><canvas id="scanCanvas"></canvas><p class="note">拖动红框，只框住马克笔编号。</p><button id="runScanOcr">识别红框</button></div>
+    <div id="scanOcrStatus" class="status">可以手动输入，也可以拍照识别。</div>
+    <div id="scanResult" class="scanResult hidden">
+      <div id="scanCode" class="scanCode">—</div>
+      <div id="scanBag" class="scanBag">袋—</div>
+      <div id="scanTask" class="scanTask"></div>
+      <div id="scanCar" class="scanCar"></div>
+      <div id="scanAddress" class="scanAddress"></div>
+      <div id="sameAddressHint" class="note strong"></div>
+      <div class="row" style="margin-top:13px"><button id="confirmScan" class="success">确认并记录</button><button id="cancelScan" class="secondary">取消</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>缺件清单</h2>
+    <div id="missingCodes" class="codes">请先生成分袋方案。</div>
+  </div>
+</section>
+
+<section id="deliver" class="page">
+  <div class="card">
+    <h2>配送任务</h2>
+    <p class="note">集中公寓会显示需要一次带走的全部袋子；普通路线段按袋号依次补到副驾驶。</p>
+    <div class="row"><button id="nextTask" class="success">完成当前任务并进入下一项</button><button id="resetDelivery" class="secondary">重置配送进度</button></div>
+    <div id="deliveryStatus" class="status">尚未生成任务。</div>
+  </div>
+  <div id="deliveryTasks"></div>
+</section>
+
 </main>
-<nav class="tabs"><button data-page="setup" class="active">今日线路</button><button data-page="scan">扫描装车</button><button data-page="audit">缺件盘点</button></nav>
+<nav class="tabs">
+  <button data-page="create" class="active"><span class="tabIcon">＋</span>创建</button>
+  <button data-page="review"><span class="tabIcon">✓</span>核对</button>
+  <button data-page="plan"><span class="tabIcon">▣</span>分袋</button>
+  <button data-page="scan"><span class="tabIcon">⌁</span>扫描</button>
+  <button data-page="deliver"><span class="tabIcon">➜</span>配送</button>
+</nav>
+
+<video id="workVideo" class="hidden" playsinline muted></video><canvas id="frameCanvas" class="hidden"></canvas>
 <script>
-const $=id=>document.getElementById(id);let state={items:{},scanned:[]},img=new Image(),selection=null,dragStart=null,worker=null,current=null;
-function norm(x){return String(x||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
-function parseData(text){const out={},errors=[];text.split(/\n+/).forEach((line,i)=>{line=line.trim();if(!line)return;const p=line.split(/[,，|\t]/).map(x=>x.trim());if(p.length<4){errors.push(i+1);return}const code=norm(p[0]),zone=p[1].toUpperCase(),order=p[2],place=p.slice(3).join(" ");if(!/^[A-Z]+\d+$/.test(code)||!zone||!place){errors.push(i+1);return}out[code]={zone,order,place}});return{out,errors}}
-function saveLocal(){localStorage.setItem("gofoDynamicSorter",JSON.stringify(state))}
-function loadLocal(){try{const x=localStorage.getItem("gofoDynamicSorter");if(x)state=JSON.parse(x)}catch(e){}update()}
-function keys(){return Object.keys(state.items||{}).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}))}
-function update(){const exp=keys(),sc=[...new Set(state.scanned||[])].filter(x=>state.items[x]);state.scanned=sc;const miss=exp.filter(x=>!sc.includes(x));expected.textContent=aExpected.textContent=exp.length;scanned.textContent=aScanned.textContent=sc.length;remaining.textContent=aMissing.textContent=miss.length;bar.style.width=exp.length?Math.round(sc.length/exp.length*100)+"%":"0%";missing.textContent=exp.length?(miss.length?miss.join("\n"):"✅ 没有缺件"):"请先保存今日线路。"}
-saveToday.onclick=()=>{const{out,errors}=parseData(dataText.value);if(!Object.keys(out).length){setupMsg.className="status err";setupMsg.textContent="没有读到有效数据。";return}state.items=out;state.scanned=state.scanned.filter(x=>out[x]);saveLocal();update();setupMsg.className="status ok";setupMsg.textContent=`已保存 ${Object.keys(out).length} 件${errors.length?`；第 ${errors.join(",")} 行有问题`:"；可以开始扫描"}`};
-clearScans.onclick=()=>{if(confirm("只清空扫描记录吗？")){state.scanned=[];saveLocal();update()}};
-document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.page).classList.add("active");update()});
-const cv=canvas,ctx=cv.getContext("2d");
-function draw(){if(!img.src)return;ctx.drawImage(img,0,0,cv.width,cv.height);if(!selection)selection={x:cv.width*.12,y:cv.height*.28,w:cv.width*.76,h:cv.height*.45};ctx.strokeStyle="#ef4444";ctx.lineWidth=4;ctx.strokeRect(selection.x,selection.y,selection.w,selection.h);ctx.fillStyle="rgba(239,68,68,.10)";ctx.fillRect(selection.x,selection.y,selection.w,selection.h)}
-photo.onchange=e=>{const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f);img.onload=()=>{const sc=Math.min(1,1000/img.naturalWidth);cv.width=Math.round(img.naturalWidth*sc);cv.height=Math.round(img.naturalHeight*sc);selection=null;draw();canvasWrap.style.display="block";ocrMsg.textContent="请拖红框，只框住手写编号。";URL.revokeObjectURL(u)};img.src=u};
-cv.addEventListener("pointerdown",e=>{const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;dragStart={x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};selection={x:dragStart.x,y:dragStart.y,w:1,h:1};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener("pointermove",e=>{if(!dragStart)return;const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height,x=(e.clientX-r.left)*sx,y=(e.clientY-r.top)*sy;selection={x:Math.min(dragStart.x,x),y:Math.min(dragStart.y,y),w:Math.abs(x-dragStart.x),h:Math.abs(y-dragStart.y)};draw()});
-cv.addEventListener("pointerup",()=>{dragStart=null;draw()});
-function crop(){const s=selection||{x:0,y:0,w:cv.width,h:cv.height},c=document.createElement("canvas"),scale=Math.max(2,Math.min(4,1200/Math.max(s.w,1)));c.width=Math.max(10,Math.round(s.w*scale));c.height=Math.max(10,Math.round(s.h*scale));const x=c.getContext("2d");x.drawImage(cv,s.x,s.y,s.w,s.h,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height);for(let i=0;i<d.data.length;i+=4){const g=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2],v=g<175?0:255;d.data[i]=d.data[i+1]=d.data[i+2]=v}x.putImageData(d,0,0);return c}
-async function getWorker(){if(worker)return worker;ocrMsg.textContent="首次加载OCR引擎，请稍等……";worker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")ocrMsg.textContent=`识别中 ${Math.round((m.progress||0)*100)}%`}});await worker.setParameters({tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",tessedit_pageseg_mode:"7"});return worker}
-function dist(a,b){const d=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));for(let i=0;i<=a.length;i++)d[i][0]=i;for(let j=0;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
-function candidates(raw){const base=norm(raw),all=keys();let out=[];if(base)out.push(base);all.map(code=>({code,d:dist(base,code)})).sort((a,b)=>a.d-b.d||a.code.localeCompare(b.code,undefined,{numeric:true})).slice(0,6).forEach(x=>out.push(x.code));return[...new Set(out)].filter(Boolean).slice(0,7)}
-recognize.onclick=async()=>{if(!keys().length)return alert("请先保存今日线路。");if(!img.src)return alert("请先拍照。");recognize.disabled=true;result.style.display="none";try{const w=await getWorker(),r=await w.recognize(crop()),raw=r.data.text||"",list=candidates(raw);ocrMsg.className="status ok";ocrMsg.textContent=`OCR原始结果：${norm(raw)||"未识别"}。请确认。`;show(list)}catch(e){ocrMsg.className="status err";ocrMsg.textContent="OCR加载或识别失败，请检查网络。"}recognize.disabled=false};
-function show(list){result.style.display="block";chips.innerHTML="";list.forEach(code=>{const b=document.createElement("button");b.className="chip";b.textContent=code;b.onclick=()=>pick(code);chips.appendChild(b)});if(list.length)pick(list[0]);else{mainCode.textContent="手动输入";confirm.disabled=true}}
-function pick(code){code=norm(code);current=code;mainCode.textContent=code||"—";const item=state.items[code];result.className="result "+(item?.zone||"");if(item){area.textContent=`${item.zone}区`;order.textContent=`派送顺序：${item.order}`;place.textContent=item.place;confirm.disabled=false}else{area.textContent="不在今日清单";order.textContent="请改选候选或手动输入";place.textContent="";confirm.disabled=true}}
-useManual.onclick=()=>pick(manual.value);
-confirm.onclick=()=>{if(!current||!state.items[current])return;if(state.scanned.includes(current))return alert(`⚠️ 重复：${current} 已确认过。`);state.scanned.push(current);saveLocal();update();const item=state.items[current];if("speechSynthesis"in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(`${item.zone}区，${item.place}`);u.lang="zh-CN";speechSynthesis.speak(u)}alert(`${current} → ${item.zone}区 → ${item.place}`);result.style.display="none";photo.value="";canvasWrap.style.display="none";img.src="";current=null};
-cancel.onclick=()=>{result.style.display="none";current=null};
-copyAudit.onclick=async()=>{const miss=keys().filter(x=>!state.scanned.includes(x)),t=`应有：${keys().length}\n已确认：${state.scanned.length}\n缺少：${miss.length}\n${miss.join(", ")||"无"}`;try{await navigator.clipboard.writeText(t);alert("缺件结果已复制")}catch(e){prompt("复制：",t)}};
-loadLocal();
-</script></body></html>
+'use strict';
+const $=id=>document.getElementById(id);
+const STORE='gofoIntegratedSorterV01';
+let state={settings:{},cards:[],packages:[],bags:[],scanned:[],scanHistory:[],deliveryIndex:0,rawOcr:'',maps:{overview:'',order:''}};
+let videoUrl='',abortAnalysis=false,ocrWorker=null,scanImg=new Image(),scanSelection=null,scanDrag=null,currentScanCode='';
+const streetWords=/\b(ST|STREET|AVE|AVENUE|BLVD|BOULEVARD|DR|DRIVE|RD|ROAD|LN|LANE|CT|COURT|WAY|PL|PLACE|PKWY|PARKWAY|HWY|HIGHWAY|PRIVADO|CIR|CIRCLE|TER|TERRACE|TRAIL|TRL|UNIT|APT|APARTMENT|SUITE|STE|BUILDING|BLDG)\b/i;
+const cityWords=/\b(ONTARIO|CALIFORNIA|CA|RANCHO CUCAMONGA|UPLAND|FONTANA|CHINO|917\d{2}|\d{5}(?:-\d{4})?)\b/i;
+function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function normCode(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function prefix(){return normCode($('routePrefix').value||state.settings.routePrefix||'H').replace(/\d/g,'')||'H'}
+function settingsFromUi(){return{routePrefix:prefix(),startSeq:+$('startSeq').value||0,endSeq:+$('endSeq').value||0,bagCount:+$('bagCount').value||12,bagCapacity:+$('bagCapacity').value||15,buildingThreshold:+$('buildingThreshold').value||3,frontTarget:+$('frontTarget').value||50,deliveryOrder:$('deliveryOrder').value.trim(),maxFrames:+$('maxFrames').value||45,cropTop:+$('cropTop').value||0,cropBottom:+$('cropBottom').value||0}}
+function applySettings(s={}){const map={routePrefix:'routePrefix',startSeq:'startSeq',endSeq:'endSeq',bagCount:'bagCount',bagCapacity:'bagCapacity',buildingThreshold:'buildingThreshold',frontTarget:'frontTarget',deliveryOrder:'deliveryOrder',maxFrames:'maxFrames',cropTop:'cropTop',cropBottom:'cropBottom'};Object.entries(map).forEach(([k,id])=>{if(s[k]!==undefined)$(id).value=s[k]})}
+function expectedTotal(){const s=settingsFromUi();return s.startSeq&&s.endSeq>=s.startSeq?s.endSeq-s.startSeq+1:0}
+function save(){state.settings=settingsFromUi();state.rawOcr=$('rawOcr').value;localStorage.setItem(STORE,JSON.stringify(state))}
+function load(){try{const raw=localStorage.getItem(STORE);if(raw)state=JSON.parse(raw)}catch(e){}applySettings(state.settings||{});$('rawOcr').value=state.rawOcr||'';if(state.maps?.overview){$('overviewPreview').src=state.maps.overview;$('mapPreviews').classList.remove('hidden');$('overviewLabel').classList.add('ready');$('overviewLabel').childNodes[0].nodeValue='已选择配送总览图'}if(state.maps?.order){$('orderPreview').src=state.maps.order;$('mapPreviews').classList.remove('hidden');$('orderLabel').classList.add('ready');$('orderLabel').childNodes[0].nodeValue='已选择顺序图'}renderAll()}
+function setStatus(id,msg,type=''){$(id).className='status'+(type?' '+type:'');$(id).textContent=msg}
+function switchPage(id){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));renderAll()}
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>switchPage(b.dataset.page));
+
+function fileToDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+$('overviewFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;state.maps.overview=await fileToDataUrl(f);$('overviewPreview').src=state.maps.overview;$('mapPreviews').classList.remove('hidden');$('overviewLabel').classList.add('ready');save()};
+$('orderFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;state.maps.order=await fileToDataUrl(f);$('orderPreview').src=state.maps.order;$('mapPreviews').classList.remove('hidden');$('orderLabel').classList.add('ready');save()};
+$('videoFile').onchange=e=>{const f=e.target.files?.[0];if(!f)return;if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(f);$('videoPreview').src=videoUrl;$('workVideo').src=videoUrl;$('videoPreview').classList.remove('hidden');$('videoLabel').classList.add('ready');$('videoLabel').childNodes[0].nodeValue='已选择GOFO录屏';$('workVideo').onloadedmetadata=()=>setStatus('videoInfo',`录屏：${f.name}；时长 ${formatTime($('workVideo').duration)}；大小 ${(f.size/1024/1024).toFixed(1)} MB。`,'ok')};
+function formatTime(sec){sec=Math.max(0,Math.round(sec||0));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function cleanLine(s){return String(s||'').replace(/[|•·]/g,' ').replace(/\s+/g,' ').trim()}
+function isTracking(line){return /^(GFUS|CR)\s*\d{7,}/i.test(line.replace(/\s/g,''))}
+function isMultiplier(line){const m=line.match(/^[x×X]\s*(\d{1,3})$/);return m?+m[1]:0}
+function isAddressLine(line){return /^\d{1,6}\s+[A-Z]/i.test(line)||streetWords.test(line)||cityWords.test(line)}
+function parseTextToCards(text,source='OCR'){
+  const s=settingsFromUi(),lo=s.startSeq||1,hi=s.endSeq||9999;
+  const lines=String(text||'').split(/\r?\n/).map(cleanLine).filter(Boolean);
+  const cards=[];let current=null;
+  function flush(){if(!current)return;current.address=cleanAddress(current.parts.join(' '));delete current.parts;if(current.address||current.start){cards.push(current)}current=null}
+  for(let i=0;i<lines.length;i++){
+    let line=lines[i];
+    const startMatch=line.match(/^(\d{1,4})(?:\s*[x×X]\s*(\d{1,3}))?(?:\s+(.+))?$/);
+    let validStart=false,start=0,mult=1,rest='';
+    if(startMatch){start=+startMatch[1];validStart=start>=lo&&start<=hi;mult=+startMatch[2]||1;rest=startMatch[3]||''}
+    if(validStart){flush();current={id:crypto.randomUUID?.()||String(Date.now()+Math.random()),start,multiplier:Math.max(1,mult),parts:[],source};if(rest&&!isTracking(rest)){const x=rest.match(/^[x×X]\s*(\d{1,3})\s*(.*)$/);if(x){current.multiplier=Math.max(1,+x[1]||1);rest=x[2]||''}if(rest&&isAddressLine(rest))current.parts.push(rest)}continue}
+    if(!current)continue;
+    const mx=isMultiplier(line);if(mx){current.multiplier=Math.max(1,mx);continue}
+    if(isTracking(line))continue;
+    if(current.parts.join(' ').match(/\b\d{5}(?:-\d{4})?\b/))continue;
+    if(isAddressLine(line)||current.parts.length){current.parts.push(line);if(current.parts.length>4)current.parts=current.parts.slice(0,4)}
+  }
+  flush();return cards.filter(c=>c.start&&c.address);
+}
+function cleanAddress(s){return cleanLine(s).replace(/\b([A-Z][a-z]+\s+){1,4}[A-Z][a-z]+$/,'').trim()}
+function addressKey(address){let x=String(address||'').toUpperCase().replace(/[.,]/g,' ').replace(/\s+/g,' ').trim();x=x.replace(/\b(APT|APARTMENT|UNIT|SUITE|STE|BLDG|BUILDING|#)\s*[A-Z0-9-]+.*$/i,'').trim();x=x.split(/\bONTARIO\b|\bRANCHO CUCAMONGA\b|\bUPLAND\b|\bFONTANA\b|\bCHINO\b|\bCALIFORNIA\b|\bCA\b|\b\d{5}(?:-\d{4})?\b/i)[0].trim();return x.replace(/\bSTREET\b/g,'ST').replace(/\bAVENUE\b/g,'AVE').replace(/\bBOULEVARD\b/g,'BLVD').replace(/\bDRIVE\b/g,'DR').replace(/\bROAD\b/g,'RD').replace(/\bNORTH\b/g,'N').replace(/\bSOUTH\b/g,'S').replace(/\bEAST\b/g,'E').replace(/\bWEST\b/g,'W').replace(/\s+/g,' ').trim()}
+function extractUnit(address){const m=String(address||'').match(/\b(?:APT|APARTMENT|UNIT|SUITE|STE|BLDG|BUILDING|#)\s*([A-Z0-9-]+)/i);return m?m[1].toUpperCase():''}
+function cardKey(c){return `${c.start}|${c.multiplier}|${addressKey(c.address)}`}
+function mergeCards(incoming){const byStart=new Map(state.cards.map(c=>[c.start,c]));let added=0,updated=0,conflicts=[];for(const c of incoming){const old=byStart.get(c.start);if(!old){state.cards.push(c);byStart.set(c.start,c);added++}else if(cardKey(old)===cardKey(c)){if((c.address||'').length>(old.address||'').length)old.address=c.address;updated++}else{conflicts.push(`起始号 ${c.start} 出现两个不同地址`);if((old.address||'').length<(c.address||'').length){old.address=c.address;old.multiplier=c.multiplier}}}state.cards.sort((a,b)=>a.start-b.start);rebuildPackages();return{added,updated,conflicts}}
+function rebuildPackages(){const s=settingsFromUi();state.cards.sort((a,b)=>a.start-b.start);const packages=[],seen=new Map(),issues=[];for(let i=0;i<state.cards.length;i++){const c=state.cards[i];c.start=Math.max(0,+c.start||0);c.multiplier=Math.max(1,+c.multiplier||1);const expectedNext=c.start+c.multiplier;const next=state.cards[i+1];if(next&&next.start!==expectedNext){if(next.start<expectedNext)issues.push({type:'red',text:`编号重叠：${c.start} ×${c.multiplier} 会展开到 ${expectedNext-1}，但下一张卡从 ${next.start} 开始。`});else issues.push({type:'warn',text:`编号链断开：${c.start} ×${c.multiplier} 后应从 ${expectedNext} 开始，但下一张卡是 ${next.start}。可能漏录 ${expectedNext}—${next.start-1}。`})}
+    for(let j=0;j<c.multiplier;j++){const seq=c.start+j,code=s.routePrefix+seq,p={code,seq,address:c.address,baseAddress:addressKey(c.address),unit:extractUnit(c.address),cardStart:c.start,multiplier:c.multiplier,source:c.source||'',bag:null,taskId:'',taskName:'',car:''};if(seen.has(seq)){issues.push({type:'red',text:`重复包裹编号：${code} 同时由 ${seen.get(seq)} 和 ${c.start}×${c.multiplier} 产生。`})}else{seen.set(seq,`${c.start}×${c.multiplier}`);packages.push(p)}}}
+  if(s.startSeq&&s.endSeq>=s.startSeq){const got=new Set(packages.map(p=>p.seq)),missing=[];for(let n=s.startSeq;n<=s.endSeq;n++)if(!got.has(n))missing.push(s.routePrefix+n);if(missing.length)issues.push({type:'warn',text:`尚未提取 ${missing.length} 件：${compressCodes(missing).slice(0,600)}${missing.length>60?'…':''}`})}
+  const oldMap=new Map((state.packages||[]).map(p=>[p.code,p]));state.packages=packages.map(p=>Object.assign(p,oldMap.get(p.code)?{bag:oldMap.get(p.code).bag,taskId:oldMap.get(p.code).taskId,taskName:oldMap.get(p.code).taskName,car:oldMap.get(p.code).car}:{}));state._issues=issues;state.scanned=(state.scanned||[]).filter(c=>state.packages.some(p=>p.code===c));save();renderAll();return issues}
+function compressCodes(codes){const arr=codes.map(c=>({p:(c.match(/^[A-Z]+/)||[''])[0],n:+(c.match(/\d+/)||[0])[0]})).sort((a,b)=>a.n-b.n),out=[];let i=0;while(i<arr.length){let j=i;while(j+1<arr.length&&arr[j+1].p===arr[i].p&&arr[j+1].n===arr[j].n+1)j++;out.push(j-i>=2?`${arr[i].p}${arr[i].n}—${arr[j].p}${arr[j].n}`:arr.slice(i,j+1).map(x=>x.p+x.n).join(', '));i=j+1}return out.join(', ')}
+
+async function getOcrWorker(mode='text'){
+  if(!ocrWorker){ocrWorker=await Tesseract.createWorker('eng',1,{logger:m=>{if(m.status==='recognizing text'&&!abortAnalysis){$('analysisStatus').textContent=`OCR识别中：${Math.round((m.progress||0)*100)}%`}}})}
+  await ocrWorker.setParameters(mode==='code'?{tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',tessedit_pageseg_mode:'7'}:{tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});return ocrWorker
+}
+function seekVideo(video,time){return new Promise((res,rej)=>{const done=()=>{video.removeEventListener('seeked',done);res()};video.addEventListener('seeked',done);video.currentTime=Math.min(Math.max(0,time),Math.max(0,(video.duration||0)-.05));setTimeout(()=>{video.removeEventListener('seeked',done);res()},2500)})}
+function prepareFrame(video){const c=$('frameCanvas'),maxW=1000,scale=Math.min(1,maxW/video.videoWidth),w=Math.round(video.videoWidth*scale),topPct=(+$('cropTop').value||0)/100,bottomPct=(+$('cropBottom').value||0)/100,srcTop=Math.round(video.videoHeight*topPct),srcBottom=Math.round(video.videoHeight*bottomPct),srcH=Math.max(50,video.videoHeight-srcTop-srcBottom),cropH=Math.max(50,Math.round(srcH*scale));c.width=w;c.height=cropH;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(video,0,srcTop,video.videoWidth,srcH,0,0,w,cropH);const d=x.getImageData(0,0,w,cropH);for(let i=0;i<d.data.length;i+=4){const g=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2];const v=g<95?0:g>225?255:Math.max(0,Math.min(255,(g-128)*1.35+128));d.data[i]=d.data[i+1]=d.data[i+2]=v}x.putImageData(d,0,0);return c}
+$('analyzeVideo').onclick=async()=>{const video=$('workVideo');if(!videoUrl||!video.duration)return alert('请先选择录屏并等待时长显示。');abortAnalysis=false;$('analyzeVideo').disabled=true;$('stopAnalyze').disabled=false;const n=Math.max(5,Math.min(150,+$('maxFrames').value||45)),duration=video.duration,times=Array.from({length:n},(_,i)=>n===1?0:i*(duration-.15)/(n-1));let allText=[],found=0;try{const worker=await getOcrWorker('text');for(let i=0;i<times.length;i++){if(abortAnalysis)break;setStatus('analysisStatus',`正在处理第 ${i+1}/${times.length} 帧；已发现 ${found} 张地址卡。`,'info');$('videoBar').style.width=Math.round(i/times.length*100)+'%';await seekVideo(video,times[i]);const result=await worker.recognize(prepareFrame(video));const text=result.data.text||'';allText.push(`\n--- FRAME ${i+1} ---\n${text}`);const parsed=parseTextToCards(text,`录屏帧${i+1}`);const r=mergeCards(parsed);found=state.cards.length}
+    $('rawOcr').value=($('rawOcr').value+'\n'+allText.join('\n')).trim();state.rawOcr=$('rawOcr').value;save();$('videoBar').style.width='100%';setStatus('analysisStatus',abortAnalysis?`已停止；目前识别 ${state.cards.length} 张地址卡、展开 ${state.packages.length} 件。`:`分析完成：识别 ${state.cards.length} 张地址卡，展开 ${state.packages.length} 件。请进入“核对”。`,abortAnalysis?'warn':'ok');switchPage('review')
+  }catch(e){console.error(e);setStatus('analysisStatus','录屏OCR失败：'+(e.message||'请检查网络和视频格式。'),'err')}finally{$('analyzeVideo').disabled=false;$('stopAnalyze').disabled=true}}
+$('stopAnalyze').onclick=()=>{abortAnalysis=true;$('stopAnalyze').disabled=true};
+$('parseRaw').onclick=()=>{const parsed=parseTextToCards($('rawOcr').value,'粘贴文字');const r=mergeCards(parsed);setStatus('analysisStatus',`解析完成：新增 ${r.added} 张，合并重复画面 ${r.updated} 张${r.conflicts.length?'；冲突 '+r.conflicts.length+' 条':''}。` ,r.conflicts.length?'warn':'ok');switchPage('review')};
+$('loadExample').onclick=()=>{const text=`91\nGFUS01059439655361\n947 N Divino Privado Unit 12, Ontario, California, 91764\nJasmine Gonzalez\n92\nx2\nGFUS01060461500994\n1020 North Tangent Privado Unit 205, Ontario, CALIFORNIA, 91764\nChristina Delfine\n94\nGFUS01061260261953\n1000 N Tangent Privado Unit 204, ONTARIO, California, 91764\nRicky Hernandez\n95\nCR010900193523\n4152 E Axis Privado Unit 204, Ontario, California, 91764\nKimberly Diaz\n96\nGFUS01060836383809\n3990 Inland Emp Blvd Unit 324, Ontario, California, 91764`;$('rawOcr').value=text;const r=mergeCards(parseTextToCards(text,'示例'));setStatus('analysisStatus',`示例已载入：92×2正确展开为 ${prefix()}92、${prefix()}93，下一张从 ${prefix()}94开始。`,'ok');switchPage('review')};
+$('clearTask').onclick=()=>{if(!confirm('清空今天所有地址、方案和扫描记录？'))return;state.cards=[];state.packages=[];state.bags=[];state.scanned=[];state.scanHistory=[];state.rawOcr='';state.deliveryIndex=0;$('rawOcr').value='';save();renderAll()};
+
+function renderReview(){const exp=expectedTotal(),issues=state._issues||[];$('cardCount').textContent=state.cards.length;$('packageCount').textContent=state.packages.length;$('expectedCount').textContent=exp;$('issueCount').textContent=issues.length;const diff=exp?state.packages.length-exp:0;setStatus('reviewSummary',state.cards.length?`识别 ${state.cards.length} 张地址卡，按连单规则展开 ${state.packages.length} 件${exp?`；理论 ${exp} 件，差额 ${diff>0?'+':''}${diff}`:''}。`:'尚未导入订单。',issues.length?'warn':state.cards.length?'ok':'');$('issues').innerHTML=issues.map(x=>`<div class="issue ${x.type==='red'?'red':''}">${esc(x.text)}</div>`).join('');$('cardsBody').innerHTML=state.cards.map((c,i)=>`<tr data-i="${i}"><td><input class="editStart" type="number" value="${c.start}"></td><td><input class="editMult" type="number" min="1" value="${c.multiplier}"></td><td><input class="editAddress" value="${esc(c.address)}"></td><td class="mono">${prefix()}${c.start}${c.multiplier>1?`—${prefix()}${c.start+c.multiplier-1}`:''}</td><td><button class="smallBtn danger deleteCard">删</button></td></tr>`).join('');document.querySelectorAll('#cardsBody tr').forEach(tr=>{const i=+tr.dataset.i;tr.querySelector('.editStart').onchange=e=>{state.cards[i].start=+e.target.value;rebuildPackages()};tr.querySelector('.editMult').onchange=e=>{state.cards[i].multiplier=Math.max(1,+e.target.value||1);rebuildPackages()};tr.querySelector('.editAddress').onchange=e=>{state.cards[i].address=e.target.value.trim();rebuildPackages()};tr.querySelector('.deleteCard').onclick=()=>{state.cards.splice(i,1);rebuildPackages()}})}
+$('addCard').onclick=()=>{const s=settingsFromUi(),last=state.cards.at(-1);state.cards.push({id:String(Date.now()),start:last?last.start+last.multiplier:s.startSeq||1,multiplier:1,address:'',source:'手动'});rebuildPackages()};$('rebuildPackages').onclick=rebuildPackages;
+$('exportJson').onclick=()=>{save();const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`GOFO_${prefix()}_${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('importJson').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);applySettings(state.settings||{});$('rawOcr').value=state.rawOcr||'';rebuildPackages();alert('备份已导入')}catch(err){alert('备份文件无法读取')}};r.readAsText(f)};
+
+function taskType(group){if(group.length>=8)return'大型集中地址';if(group.length>=3)return'多件建筑';if(group.some(p=>p.unit))return'公寓/单元地址';return'普通地址'}
+function unitSort(a,b){const na=+(a.unit.match(/\d+/)||[99999])[0],nb=+(b.unit.match(/\d+/)||[99999])[0];return na-nb||a.seq-b.seq}
+function carPosition(bagNo){if(bagNo===1)return'副驾驶座椅';if(bagNo===2)return'副驾驶脚下';if(bagNo<=4)return'后排右侧';if(bagNo<=7)return'后排左侧';return bagNo<=9?'后备箱靠出口':'后备箱靠里面'}
+function generateLocalPlan(){if(!state.packages.length)return alert('请先导入并核对订单。');const s=settingsFromUi(),cap=Math.max(3,s.bagCapacity),threshold=Math.max(2,s.buildingThreshold),groups=new Map();for(const p of state.packages){const k=p.baseAddress||p.address;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(p)}const ordered=[...groups.entries()].map(([key,ps])=>({key,ps:ps.sort(unitSort),min:Math.min(...ps.map(p=>p.seq)),type:taskType(ps)})).sort((a,b)=>a.min-b.min);let bags=[],bagNo=1,normal=[];
+  function addBag(taskName,type,arr,taskId){if(!arr.length)return;const bag={bag:bagNo++,taskId,taskName,type,count:arr.length,car:carPosition(bagNo-1),codes:arr.map(p=>p.code),address:arr[0].baseAddress||arr[0].address,over:arr.length>cap};bags.push(bag);for(const p of arr){p.bag=bag.bag;p.taskId=taskId;p.taskName=taskName;p.car=bag.car}}
+  function flushNormal(){if(!normal.length)return;addBag(`普通路线段 ${bags.filter(b=>b.type==='普通路线段').length+1}`,'普通路线段',normal,`R${Date.now()}_${bagNo}`);normal=[]}
+  let taskCounter=1;for(const g of ordered){const dedicated=g.ps.length>=threshold;const groupId=`T${taskCounter++}`;if(dedicated){flushNormal();const chunks=[];for(let i=0;i<g.ps.length;i+=cap)chunks.push(g.ps.slice(i,i+cap));chunks.forEach((chunk,idx)=>addBag(`${g.type}：${g.key}${chunks.length>1?`（${idx+1}/${chunks.length}）`:''}`,g.type,chunk,groupId))}else{if(normal.length+g.ps.length>cap)flushNormal();normal.push(...g.ps)}}flushNormal();state.bags=bags;state.deliveryIndex=0;save();renderAll();setStatus('planStatus',`已生成 ${bags.length} 个袋子。当前为本地规则初步方案；下一轮接入实际地图和AI区域顺序。`,bags.length>s.bagCount?'warn':'ok')}
+$('generatePlan').onclick=generateLocalPlan;$('resetPlan').onclick=()=>{state.bags=[];state.packages.forEach(p=>Object.assign(p,{bag:null,taskId:'',taskName:'',car:''}));save();renderAll()};
+function renderPlan(){const s=settingsFromUi(),bags=state.bags||[],front=bags.filter(b=>['副驾驶座椅','副驾驶脚下','后排右侧'].includes(b.car)).reduce((n,b)=>n+b.count,0),large=new Set(bags.filter(b=>b.type==='大型集中地址'||b.type==='多件建筑').map(b=>b.taskId)).size,over=bags.filter(b=>b.over).length;$('plannedBags').textContent=bags.length;$('frontPackages').textContent=front;$('largeTasks').textContent=large;$('overCapacity').textContent=over;if(!bags.length)setStatus('planStatus','还没有分袋方案。');$('bagsList').innerHTML=bags.map(b=>`<div class="bagCard"><div class="bagHead"><div class="bagNo">${b.bag}</div><div class="bagMeta"><b>${esc(b.taskName)}</b><div>${b.count}件 · ${esc(b.car)} ${b.over?'· 超出建议容量':''}</div></div><span class="tag ${b.type==='大型集中地址'?'orange':b.type==='多件建筑'?'blue':'green'}">${esc(b.type)}</span></div><div class="codes">${esc(compressCodes(b.codes))}</div></div>`).join('')}
+
+function packageByCode(code){return state.packages.find(p=>p.code===normCode(code))}
+function resolveCode(raw){let code=normCode(raw);if(/^\d+$/.test(code))code=prefix()+code;return code}
+function lookupScan(raw){const code=resolveCode(raw),p=packageByCode(code);currentScanCode=code;$('scanResult').classList.remove('hidden','duplicate','unknown');$('scanCode').textContent=code||'—';if(!p){$('scanResult').classList.add('unknown');$('scanBag').textContent='未找到';$('scanTask').textContent='不在今日清单';$('scanCar').textContent='请检查编号或先生成方案';$('scanAddress').textContent='';$('sameAddressHint').textContent='';$('confirmScan').disabled=true;return}const duplicate=state.scanned.includes(code);if(duplicate)$('scanResult').classList.add('duplicate');$('scanBag').textContent=`袋${p.bag??'—'}`;$('scanTask').textContent=p.taskName||'尚未生成分袋方案';$('scanCar').textContent=p.car||'';$('scanAddress').textContent=p.address;const same=state.packages.filter(x=>x.baseAddress===p.baseAddress),done=same.filter(x=>state.scanned.includes(x.code)).length;$('sameAddressHint').textContent=same.length>1?`同一主地址共 ${same.length} 件；当前已分拣 ${done}/${same.length}${duplicate?'。此件已扫描过！':''}`:(duplicate?'⚠️ 此件已经扫描过':'');$('confirmScan').disabled=duplicate||!p.bag}
+$('manualLookup').onclick=()=>lookupScan($('manualCode').value);$('manualCode').addEventListener('keydown',e=>{if(e.key==='Enter')lookupScan(e.target.value)});$('confirmScan').onclick=()=>{const p=packageByCode(currentScanCode);if(!p||state.scanned.includes(p.code))return;state.scanned.push(p.code);state.scanHistory.push(p.code);save();speak(`袋 ${p.bag}`);$('manualCode').value='';$('scanResult').classList.add('hidden');currentScanCode='';renderScan()};$('cancelScan').onclick=()=>{$('scanResult').classList.add('hidden');currentScanCode=''};
+function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';u.rate=1.25;speechSynthesis.speak(u)}
+let scanStart=0,timerHandle=0;$('startTimer').onclick=()=>{if(!scanStart){scanStart=Date.now();$('startTimer').textContent='暂停计时';timerHandle=setInterval(renderScan,1000)}else{scanStart=0;clearInterval(timerHandle);$('startTimer').textContent='继续计时'}};$('undoScan').onclick=()=>{const code=state.scanHistory.pop();if(!code)return;const idx=state.scanned.lastIndexOf(code);if(idx>=0)state.scanned.splice(idx,1);save();renderScan()};
+function renderScan(){const total=state.packages.length,done=state.scanned.filter(c=>packageByCode(c)).length,missing=state.packages.filter(p=>!state.scanned.includes(p.code));$('scanTotal').textContent=total;$('scanDone').textContent=done;$('scanMissing').textContent=missing.length;$('scanBar').style.width=total?Math.round(done/total*100)+'%':'0%';let sec=scanStart?(Date.now()-scanStart)/1000:0;$('scanTimer').textContent=formatTime(sec);if(scanStart&&done){const avg=sec/done,project=avg*total/60;setStatus('paceStatus',`当前 ${avg.toFixed(1)} 秒/件；预计完成 ${project.toFixed(1)} 分钟。`,project<=20?'ok':project<=25?'warn':'err')}else if(!scanStart)setStatus('paceStatus',`已分拣 ${done}/${total}。点击开始计时，目标不超过20分钟。`);$('missingCodes').textContent=missing.length?compressCodes(missing.map(p=>p.code)):'✅ 没有缺件'}
+
+const sc=$('scanCanvas'),sctx=sc.getContext('2d',{willReadFrequently:true});function drawScan(){if(!scanImg.src)return;sctx.drawImage(scanImg,0,0,sc.width,sc.height);if(!scanSelection)scanSelection={x:sc.width*.12,y:sc.height*.28,w:sc.width*.76,h:sc.height*.42};sctx.strokeStyle='#ef4444';sctx.lineWidth=4;sctx.strokeRect(scanSelection.x,scanSelection.y,scanSelection.w,scanSelection.h);sctx.fillStyle='rgba(239,68,68,.08)';sctx.fillRect(scanSelection.x,scanSelection.y,scanSelection.w,scanSelection.h)}
+$('scanPhoto').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const u=URL.createObjectURL(f);scanImg.onload=()=>{const scale=Math.min(1,1100/scanImg.naturalWidth);sc.width=Math.round(scanImg.naturalWidth*scale);sc.height=Math.round(scanImg.naturalHeight*scale);scanSelection=null;drawScan();$('scanCanvasWrap').style.display='block';setStatus('scanOcrStatus','请拖红框，只框住手写编号。','info');URL.revokeObjectURL(u)};scanImg.src=u};
+sc.addEventListener('pointerdown',e=>{const r=sc.getBoundingClientRect(),sx=sc.width/r.width,sy=sc.height/r.height;scanDrag={x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};scanSelection={x:scanDrag.x,y:scanDrag.y,w:1,h:1};sc.setPointerCapture(e.pointerId)});sc.addEventListener('pointermove',e=>{if(!scanDrag)return;const r=sc.getBoundingClientRect(),sx=sc.width/r.width,sy=sc.height/r.height,x=(e.clientX-r.left)*sx,y=(e.clientY-r.top)*sy;scanSelection={x:Math.min(scanDrag.x,x),y:Math.min(scanDrag.y,y),w:Math.abs(x-scanDrag.x),h:Math.abs(y-scanDrag.y)};drawScan()});sc.addEventListener('pointerup',()=>{scanDrag=null;drawScan()});
+function cropScan(){const s=scanSelection||{x:0,y:0,w:sc.width,h:sc.height},c=document.createElement('canvas'),scale=Math.max(2,Math.min(4,1200/Math.max(s.w,1)));c.width=Math.max(10,Math.round(s.w*scale));c.height=Math.max(10,Math.round(s.h*scale));const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(sc,s.x,s.y,s.w,s.h,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height);for(let i=0;i<d.data.length;i+=4){const g=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2],v=g<170?0:255;d.data[i]=d.data[i+1]=d.data[i+2]=v}x.putImageData(d,0,0);return c}
+$('runScanOcr').onclick=async()=>{try{$('runScanOcr').disabled=true;setStatus('scanOcrStatus','识别中……','info');const w=await getOcrWorker('code'),r=await w.recognize(cropScan()),raw=normCode(r.data.text||'');setStatus('scanOcrStatus',`OCR结果：${raw||'未识别'}。请核对。`,raw?'ok':'warn');lookupScan(raw)}catch(e){setStatus('scanOcrStatus','识别失败，请直接手动输入。','err')}finally{$('runScanOcr').disabled=false}};
+
+function deliveryGroups(){const map=new Map();for(const b of state.bags){if(!map.has(b.taskId))map.set(b.taskId,{taskId:b.taskId,name:b.taskName.replace(/（\d+\/\d+）/g,''),type:b.type,bags:[],codes:[],done:false});const g=map.get(b.taskId);g.bags.push(b.bag);g.codes.push(...b.codes)}return [...map.values()]}
+function renderDelivery(){const groups=deliveryGroups(),idx=Math.min(state.deliveryIndex||0,Math.max(0,groups.length-1));if(!groups.length){setStatus('deliveryStatus','尚未生成任务。');$('deliveryTasks').innerHTML='';return}const current=groups[idx];setStatus('deliveryStatus',`当前第 ${idx+1}/${groups.length} 项：${current.name}；需要袋 ${current.bags.join('、')}，共 ${current.codes.length} 件。`,'info');$('deliveryTasks').innerHTML=groups.map((g,i)=>`<div class="bagCard ${i===idx?'currentTask':''} ${i<idx?'taskDone':''}"><div class="taskTitle">${i+1}. ${esc(g.name)}</div><div class="taskSub">需要袋：${g.bags.join('、')} · ${g.codes.length}件 · ${esc(g.type)}</div><div class="codes">${esc(compressCodes(g.codes))}</div></div>`).join('')}
+$('nextTask').onclick=()=>{const groups=deliveryGroups();if(!groups.length)return;state.deliveryIndex=Math.min(groups.length,(state.deliveryIndex||0)+1);save();renderDelivery()};$('resetDelivery').onclick=()=>{state.deliveryIndex=0;save();renderDelivery()};
+
+function renderAll(){renderReview();renderPlan();renderScan();renderDelivery();save()}
+['routePrefix','startSeq','endSeq','bagCount','bagCapacity','buildingThreshold','frontTarget','deliveryOrder','maxFrames','cropTop','cropBottom'].forEach(id=>$(id).addEventListener('change',()=>{state.settings=settingsFromUi();rebuildPackages()}));
+load();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
+</script>
+</body></html>
