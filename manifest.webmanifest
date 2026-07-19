@@ -1,6 +1,6 @@
 {
   "name": "GOFO 智能分拣",
-  "short_name": "GOFO分拣",
+  "short_name": "GOFO极速",
   "description": "GOFO录屏导入、连单展开、任务分袋、扫描装车和配送提示。",
   "lang": "zh-CN",
   "start_url": "./",

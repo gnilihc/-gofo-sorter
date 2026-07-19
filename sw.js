@@ -1,4 +1,4 @@
-const CACHE = 'gofo-sorter-pwa-v1';
+const CACHE = 'gofo-sorter-fastscan-v2';
 const APP_SHELL = [
   './',
   './index.html',
